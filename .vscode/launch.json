@@ -1,10 +1,11 @@
 {
   "configurations": [
     {
-      "name": "Python: execute query on Dune",
+      "name": "Python: Execute Current SQL File",
       "type": "debugpy",
       "request": "launch",
       "program": "src/main.py",
+      "args": ["--sql", "${file}"],
       "console": "integratedTerminal"
     }
   ]

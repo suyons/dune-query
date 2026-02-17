@@ -24,5 +24,5 @@ Archive for querying Dune Analytics using Python. This project provides a simple
 Run the basic example in `main.py`:
 
 ```bash
-uv run src/main.py
+uv run src/main.py --sql sql/example_query.sql
 ```

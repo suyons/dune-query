@@ -1,3 +1,5 @@
+import argparse
+import os
 import time
 from io import BytesIO
 
@@ -5,22 +7,6 @@ import dotenv
 import pandas as pd
 from dune_client.client import DuneClient
 from dune_client.models import ExecutionState
-
-# Constants
-ETH_VOLUME_QUERY = """
-SELECT 
-    date_trunc('hour', et.block_time) AS block_datetime,
-    round(sum(et.value / 1e18), 2) AS eth_volume,
-    round(sum(et.value / 1e18) * any_value(ph.price), 2) AS usd_volume
-FROM ethereum.transactions et
-LEFT JOIN prices.hour ph
-    ON date_trunc('hour', et.block_time) = date_trunc('hour', ph.timestamp)
-    AND blockchain = 'ethereum'
-    AND symbol = 'WETH'
-WHERE et.block_time > now() - interval '24' hour
-GROUP BY 1
-ORDER BY 1 ASC;
-"""
 
 
 def get_dune_client() -> DuneClient:
@@ -46,16 +32,48 @@ def get_query_results_dataframe(client: DuneClient, sql: str) -> pd.DataFrame:
     return pd.read_csv(BytesIO(result_csv.data.read()))
 
 
+def parse_args() -> argparse.Namespace:
+    """Parses command line arguments."""
+    parser = argparse.ArgumentParser(description="Run a SQL query on Dune Analytics.")
+    parser.add_argument("--sql", type=str, help="Path to a SQL file to execute.")
+    return parser.parse_args()
+
+
+def load_sql_from_file(file_path: str) -> str:
+    """Reads and validates SQL from a file."""
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"SQL file '{file_path}' not found.")
+
+    with open(file_path, "r") as f:
+        sql_content = f.read()
+
+    if not sql_content.strip():
+        raise ValueError(f"SQL file '{file_path}' is empty.")
+
+    return sql_content
+
+
 def main():
-    dune = get_dune_client()
-    if not dune:
-        print("Failed to initialize Dune client.")
-        return
+    args = parse_args()
+
     try:
-        df = get_query_results_dataframe(dune, ETH_VOLUME_QUERY)
+        # Load SQL from file if provided, otherwise fallback to default
+        if not args.sql or args.sql.split(".")[-1].lower() != "sql":
+            print("No SQL file provided. Exiting.")
+            return
+        sql_query = load_sql_from_file(args.sql)
+        dune = get_dune_client()
+        if not dune:
+            print("Failed to initialize Dune client.")
+            return
+
+        df = get_query_results_dataframe(dune, sql_query)
         print(df)
+
+    except (FileNotFoundError, ValueError) as e:
+        print(f"Configuration Error: {e}")
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Execution Error: {e}")
 
 
 if __name__ == "__main__":
