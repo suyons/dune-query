@@ -1,2 +1,3 @@
-# dune-query
-Queries written on dune.com
+# Dune Query
+
+Archive repository for queries on Dune Analytics.
