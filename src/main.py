@@ -1,6 +1,8 @@
 import argparse
 import os
+import tempfile
 import time
+import webbrowser
 from io import BytesIO
 
 import dotenv
@@ -53,6 +55,21 @@ def load_sql_from_file(file_path: str) -> str:
     return sql_content
 
 
+def display_dataframe_in_web(df: pd.DataFrame):
+    """Opens the DataFrame in a temporary HTML file in the browser for a GUI-like experience."""
+    template_path = os.path.join(os.path.dirname(__file__), "result_template.html")
+    with open(template_path, "r") as f:
+        template = f.read()
+
+    html = template.replace("{row_count}", str(len(df))).replace(
+        "{table_content}", df.to_html(classes="table table-hover", index=False)
+    )
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as f:
+        f.write(html.encode("utf-8"))
+        webbrowser.open(f"file://{os.path.abspath(f.name)}")
+
+
 def main():
     args = parse_args()
 
@@ -66,9 +83,12 @@ def main():
         if not dune:
             print("Failed to initialize Dune client.")
             return
-
         df = get_query_results_dataframe(dune, sql_query)
-        print(df)
+        if not df or df.empty:
+            print("No results returned from the query.")
+            return
+        print("Results retrieved successfully. Opening web browser.")
+        display_dataframe_in_web(df)
 
     except (FileNotFoundError, ValueError) as e:
         print(f"Configuration Error: {e}")
