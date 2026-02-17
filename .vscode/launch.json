@@ -1,0 +1,11 @@
+{
+  "configurations": [
+    {
+      "name": "Python: execute query on Dune",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "src/main.py",
+      "console": "integratedTerminal"
+    }
+  ]
+}
