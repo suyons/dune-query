@@ -84,7 +84,7 @@ def main():
             print("Failed to initialize Dune client.")
             return
         df = get_query_results_dataframe(dune, sql_query)
-        if not df or df.empty:
+        if df.empty:
             print("No results returned from the query.")
             return
         print("Results retrieved successfully. Opening web browser.")
