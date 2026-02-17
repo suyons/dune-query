@@ -247,3 +247,7 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Copilot instructions
+.github/copilot-instructions.md
+GEMINI.md
